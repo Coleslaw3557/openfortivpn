@@ -393,6 +393,34 @@ void read_password(const char *pinentry, const char *hint,
 	printf("\n");
 }
 
+void read_yubikey(const char *prompt, char *output, size_t len) {
+	printf("%s", prompt);
+	fflush(stdout);
+
+	if (fgets(output, len, stdin) != NULL) {
+		size_t input_len = strlen(output);
+
+		// Remove trailing newline character
+		if (input_len > 0 && output[input_len - 1] == '\n')
+			output[--input_len] = '\0';
+
+		// Trim leading whitespace
+		size_t start = 0;
+		while (isspace((unsigned char)output[start]))
+			start++;
+
+		if (start > 0)
+			memmove(output, output + start, input_len - start + 1);
+	} else {
+		output[0] = '\0';
+	}
+
+	// Consume any extra characters
+	int ch;
+	while ((ch = getchar()) != '\n' && ch != EOF)
+		;
+}
+
 char *read_from_stdin(size_t count)
 {
 	char *buf;

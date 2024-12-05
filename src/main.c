@@ -222,6 +222,7 @@ int main(int argc, char *argv[])
 	struct vpn_config cfg = {
 		.gateway_host = {'\0'},
 		.gateway_port = 443,
+		.use_yubikey = 0,
 		.username = {'\0'},
 		.password = {'\0'}, 
 		.use_yubikey = 0,
@@ -281,6 +282,7 @@ int main(int argc, char *argv[])
 	const struct option long_options[] = {
 		{"help",                 no_argument,       NULL, 'h'},
 		{"version",              no_argument,       NULL, 0},
+		{"use-yubikey",          no_argument,       &cli_cfg.use_yubikey, 1},
 		{"config",               required_argument, NULL, 'c'},
 		{"pinentry",             required_argument, NULL, 0},
 		{"realm",                required_argument, NULL, 0},

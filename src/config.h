@@ -97,7 +97,7 @@ struct vpn_config {
 	char			*pinentry;
 	char			iface_name[IF_NAMESIZE];
 	char			realm[REALM_SIZE + 1];
-
+	int			use_yubikey;
 	char			sni[GATEWAY_HOST_SIZE + 1];
 	int			set_routes;
 	int			set_dns;
