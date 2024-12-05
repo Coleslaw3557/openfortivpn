@@ -59,7 +59,7 @@ struct x509_digest {
 };
 
 #define GATEWAY_HOST_SIZE	253
-#define USERNAME_SIZE	64
+#define USERNAME_SIZE	256
 #define PASSWORD_SIZE	256
 #define OTP_SIZE	64
 #define REALM_SIZE	63
