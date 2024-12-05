@@ -24,5 +24,6 @@ void read_password(const char *pinentry, const char *hint,
                    const char *prompt, char *pass, size_t len);
 
 char *read_from_stdin(size_t count);
+void read_yubikey(const char *prompt, char *output, size_t len);
 
 #endif

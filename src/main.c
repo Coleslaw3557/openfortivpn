@@ -77,7 +77,7 @@
 
 #define usage \
 "Usage: openfortivpn [<host>[:<port>]] [-u <user>] [-p <pass>]\n" \
-"                    [--cookie=<cookie>] [--cookie-on-stdin]\n" \
+"                    [--use-yubikey] [--cookie=<cookie>] [--cookie-on-stdin]\n" \
 "                    [--otp=<otp>] [--otp-delay=<delay>] [--otp-prompt=<prompt>]\n" \
 "                    [--pinentry=<program>] [--realm=<realm>]\n" \
 "                    [--ifname=<ifname>] [--set-routes=<0|1>]\n" \
@@ -110,6 +110,7 @@ PPPD_USAGE \
 #define help_options_part1 \
 "Options:\n" \
 "  -h --help                     Show this help message and exit.\n" \
+"  --use-yubikey                 Enable Yubikey authentication support.\n" \
 "  --version                     Show version and exit.\n" \
 "  -c <file>, --config=<file>    Specify a custom configuration file (default:\n" \
 "                                " SYSCONFDIR "/openfortivpn/config).\n" \
@@ -222,7 +223,8 @@ int main(int argc, char *argv[])
 		.gateway_host = {'\0'},
 		.gateway_port = 443,
 		.username = {'\0'},
-		.password = {'\0'},
+		.password = {'\0'}, 
+		.use_yubikey = 0,
 		.password_set = 0,
 		.cookie = NULL,
 		.otp = {'\0'},
@@ -707,12 +709,31 @@ int main(int argc, char *argv[])
 		goto user_error;
 	}
 	// Check username
-	if (cfg.username[0] == '\0' && !cfg.cookie)
-		// Need either username or cert
-		if (cfg.user_cert == NULL) {
+	if (cfg.username[0] == '\0' && !cfg.cookie) {
+		if (cfg.use_yubikey) {
+			printf("VPN base username (without Yubikey token): ");
+			fflush(stdout);
+			if (fgets(cfg.username, USERNAME_SIZE + 1, stdin) != NULL) {
+				size_t len = strlen(cfg.username);
+				if (len > 0 && cfg.username[len - 1] == '\n')
+					cfg.username[len - 1] = '\0';
+			}
+			
+			char yubikey_output[OTP_SIZE + 1];
+			read_yubikey("Press your Yubikey: ", yubikey_output, sizeof(yubikey_output));
+
+			if (strlen(cfg.username) + strlen(yubikey_output) >= USERNAME_SIZE) {
+				log_error("Combined username exceeds maximum length.\n");
+				goto user_error;
+			}
+
+			strcat(cfg.username, yubikey_output);
+			log_debug("Final username after Yubikey concatenation: \"%s\"\n", cfg.username);
+		} else if (cfg.user_cert == NULL) {
 			log_error("Specify a username.\n");
 			goto user_error;
 		}
+	}
 	// If username but no password given, interactively ask user
 	if (!cfg.password_set && cfg.username[0] != '\0' && !cfg.cookie) {
 		char hint[USERNAME_SIZE + 1 + REALM_SIZE + 1 + GATEWAY_HOST_SIZE + 10];
