@@ -709,9 +709,10 @@ int main(int argc, char *argv[])
 		log_error("Specify a valid host:port couple.\n");
 		goto user_error;
 	}
-	// Check username
-	if (cfg.username[0] == '\0' && !cfg.cookie) {
-		if (cfg.use_yubikey) {
+	// Handle Yubikey authentication if enabled
+	if (cfg.use_yubikey) {
+		// If base username is empty, prompt for it
+		if (cfg.username[0] == '\0') {
 			printf("VPN base username (without Yubikey token): ");
 			fflush(stdout);
 			if (fgets(cfg.username, USERNAME_SIZE + 1, stdin) != NULL) {
@@ -719,21 +720,24 @@ int main(int argc, char *argv[])
 				if (len > 0 && cfg.username[len - 1] == '\n')
 					cfg.username[len - 1] = '\0';
 			}
-			
-			char yubikey_output[OTP_SIZE + 1];
-			read_yubikey("Press your Yubikey: ", yubikey_output, sizeof(yubikey_output));
+		}
 
-			if (strlen(cfg.username) + strlen(yubikey_output) >= USERNAME_SIZE) {
-				log_error("Combined username exceeds maximum length.\n");
-				goto user_error;
-			}
+		char yubikey_output[OTP_SIZE + 1];
+		read_yubikey("Press your Yubikey: ", yubikey_output, sizeof(yubikey_output));
 
-			strcat(cfg.username, yubikey_output);
-			log_debug("Final username after Yubikey concatenation: \"%s\"\n", cfg.username);
-		} else if (cfg.user_cert == NULL) {
-			log_error("Specify a username.\n");
+		if (strlen(cfg.username) + strlen(yubikey_output) >= USERNAME_SIZE) {
+			log_error("Combined username exceeds maximum length.\n");
 			goto user_error;
 		}
+
+		strcat(cfg.username, yubikey_output);
+		log_debug("Final username after Yubikey concatenation: \"%s\"\n", cfg.username);
+	}
+
+	// Check if we have a username by now
+	if (cfg.username[0] == '\0' && !cfg.cookie && cfg.user_cert == NULL) {
+		log_error("Specify a username.\n");
+		goto user_error;
 	}
 	// If username but no password given, interactively ask user
 	if (!cfg.password_set && cfg.username[0] != '\0' && !cfg.cookie) {
