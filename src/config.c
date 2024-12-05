@@ -636,6 +636,4 @@ void merge_config(struct vpn_config *dst, struct vpn_config *src)
 		dst->check_virtual_desktop = src->check_virtual_desktop;
 	if (src->use_yubikey != invalid_cfg.use_yubikey)
 		dst->use_yubikey = src->use_yubikey;
-	if (src->use_yubikey != invalid_cfg.use_yubikey)
-		dst->use_yubikey = src->use_yubikey;
 }
